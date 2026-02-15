@@ -425,19 +425,19 @@ function DashboardPage({tasks, goPage}) {
         <div className="gl stat" style={{'--accent':'var(--ac)'}}>
           <div className="stat-icon">{'\u{1F4BB}'}</div>
           <div className="stat-label">CPU Usage</div>
-          <div className="stat-val" style={{color:'var(--ac)'}}>{live.cpu.toFixed(1)}%</div>
+          <div className="stat-val" style={{color:'var(--ac)'}}>{parseFloat(live.cpu).toFixed(1)}%</div>
           <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.cpu+'%',background:'var(--ac)'}}></div></div>
         </div>
         <div className="gl stat">
           <div className="stat-icon">{'\u{1F9E0}'}</div>
           <div className="stat-label">Memory</div>
-          <div className="stat-val" style={{color:'var(--ac2)'}}>{live.mem.toFixed(1)}%</div>
+          <div className="stat-val" style={{color:'var(--ac2)'}}>{parseFloat(live.mem).toFixed(1)}%</div>
           <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.mem+'%',background:'var(--ac2)'}}></div></div>
         </div>
         <div className="gl stat">
           <div className="stat-icon">{'\u{1F4BE}'}</div>
           <div className="stat-label">Disk</div>
-          <div className="stat-val">{live.disk.toFixed(1)}%</div>
+          <div className="stat-val">{parseFloat(live.disk).toFixed(1)}%</div>
           <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.disk+'%',background:live.disk>80?'var(--bad)':'var(--ok)'}}></div></div>
         </div>
         <div className="gl stat">

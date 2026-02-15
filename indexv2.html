@@ -389,13 +389,13 @@ function DashboardPage({tasks, goPage}) {
         fetcher('/api/health'), fetcher('/api/momo'), fetcher('/api/cron'), fetcher('/api/agents')
       ]);
       setLive({
-        cpu: h?.cpu || 0, mem: h?.memory?.usedPercent || 0,
-        disk: h?.disk?.usedPercent || 0, uptime: h?.uptime || '--',
-        momo: m?.primary?.priceUsd || m?.priceUsd || 0,
-        momoVol: m?.primary?.volume24h || m?.volume24h || 0,
-        agents: a?.sessions?.length || 0,
-        crons: c?.jobs?.filter(j => j.enabled)?.length || 0,
-        totalCrons: c?.jobs?.length || 0
+        cpu: Number(h?.cpu) || 0, mem: Number(h?.memory?.usedPercent) || 0,
+        disk: Number(h?.disk?.usedPercent) || 0, uptime: h?.uptime || '--',
+        momo: Number(m?.primary?.priceUsd || m?.priceUsd) || 0,
+        momoVol: Number(m?.primary?.volume24h || m?.volume24h) || 0,
+        agents: Number(a?.sessions?.length) || 0,
+        crons: Number(c?.jobs?.filter(j => j.enabled)?.length) || 0,
+        totalCrons: Number(c?.jobs?.length) || 0
       });
       setTs(new Date().toLocaleTimeString());
     };
@@ -1185,9 +1185,9 @@ function HealthPage() {
     );
   };
 
-  const cpu = h?.cpu || 0;
-  const mem = h?.memory?.usedPercent || 0;
-  const disk = h?.disk?.usedPercent || 0;
+  const cpu = Number(h?.cpu) || 0;
+  const mem = Number(h?.memory?.usedPercent) || 0;
+  const disk = Number(h?.disk?.usedPercent) || 0;
 
   return (
     <div className="anim">

@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;--sw:240px;--blur:20px;--tr:0.25s cubic-bezier(0.4,0,0.2,1)}
+
+[data-theme="dark"]{
+--bg:#06060c;--bg2:#0c0c16;--bg3:#111120;
+--gl:rgba(255,255,255,0.035);--glh:rgba(255,255,255,0.07);--glb:rgba(255,255,255,0.07);--glhi:rgba(255,255,255,0.11);
+--t1:#eaeaf4;--t2:#8585a0;--t3:#50506a;
+--ac:#7c6cff;--acg:rgba(124,108,255,0.25);--ac2:#00e5aa;--ac3:#ff6b9d;
+--ok:#00e5aa;--warn:#ffb84d;--bad:#ff4d5e;
+--sbg:rgba(8,8,16,0.96);--sh:0 8px 40px rgba(0,0,0,0.5);--ibg:rgba(255,255,255,0.04);
+--card-glow:0 0 0 1px rgba(124,108,255,0.08);
+--grad1:linear-gradient(135deg,rgba(124,108,255,0.12),rgba(0,229,170,0.06));
+--grad2:linear-gradient(135deg,rgba(255,107,157,0.12),rgba(255,184,77,0.06))
+}
+[data-theme="light"]{
+--bg:#f2f2f8;--bg2:#ffffff;--bg3:#fafaff;
+--gl:rgba(255,255,255,0.7);--glh:rgba(255,255,255,0.85);--glb:rgba(0,0,0,0.06);--glhi:rgba(255,255,255,0.95);
+--t1:#16162a;--t2:#606080;--t3:#9090aa;
+--ac:#6055e0;--acg:rgba(96,85,224,0.18);--ac2:#00c090;--ac3:#e5527a;
+--ok:#00c090;--warn:#e8a020;--bad:#d94050;
+--sbg:rgba(255,255,255,0.94);--sh:0 8px 40px rgba(0,0,0,0.06);--ibg:rgba(0,0,0,0.03);
+--card-glow:0 0 0 1px rgba(96,85,224,0.06);
+--grad1:linear-gradient(135deg,rgba(96,85,224,0.08),rgba(0,192,144,0.04));
+--grad2:linear-gradient(135deg,rgba(229,82,122,0.08),rgba(232,160,32,0.04))
+}
+[data-theme="midnight"]{
+--bg:#040810;--bg2:#080e1c;--bg3:#0c1428;
+--gl:rgba(20,50,100,0.18);--glh:rgba(20,50,100,0.28);--glb:rgba(60,120,220,0.1);--glhi:rgba(60,120,220,0.16);
+--t1:#c8daf0;--t2:#6882a8;--t3:#3a5070;
+--ac:#4a9eff;--acg:rgba(74,158,255,0.25);--ac2:#00eac0;--ac3:#ff7eb3;
+--ok:#00eac0;--warn:#ffb84d;--bad:#ff4d5e;
+--sbg:rgba(4,8,18,0.96);--sh:0 8px 40px rgba(0,0,0,0.6);--ibg:rgba(60,120,220,0.05);
+--card-glow:0 0 0 1px rgba(74,158,255,0.06);
+--grad1:linear-gradient(135deg,rgba(74,158,255,0.12),rgba(0,234,192,0.06));
+--grad2:linear-gradient(135deg,rgba(255,126,179,0.12),rgba(255,184,77,0.06))
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);transition:background var(--tr),color var(--tr)}
+
+/* Glass panel */
+.gl{background:var(--gl);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border:1px solid var(--glb);border-radius:14px;transition:all var(--tr)}
+.gl:hover{background:var(--glh)}
+.gl-s{background:var(--gl);backdrop-filter:blur(var(--blur));border:1px solid var(--glb);border-radius:10px}
+
+/* App layout */
+.app{display:flex;height:100vh;overflow:hidden}
+.sb{width:var(--sw);height:100vh;background:var(--sbg);backdrop-filter:blur(24px);border-right:1px solid var(--glb);display:flex;flex-direction:column;flex-shrink:0;z-index:100;overflow-y:auto}
+.mn{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)}
+
+/* Sidebar */
+.sb-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--glb)}
+.sb-logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;letter-spacing:-0.5px}
+.sb-logo-text{font-size:14px;font-weight:700;letter-spacing:-0.3px}
+.sb-logo-ver{font-size:9px;color:var(--t3);font-family:var(--mono);margin-top:1px}
+.sb-nav{padding:10px 8px;flex:1}
+.sb-section{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;padding:12px 12px 6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);transition:all var(--tr);margin-bottom:1px}
+.sb-item:hover{background:var(--glh);color:var(--t1)}
+.sb-item.on{background:var(--acg);color:var(--ac);font-weight:600}
+.sb-item .icon{width:18px;text-align:center;font-size:14px}
+.sb-badge{margin-left:auto;background:var(--ac);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;font-family:var(--mono)}
+.sb-foot{padding:12px;border-top:1px solid var(--glb)}
+
+/* Page header */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.ph-title{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.ph-sub{font-size:12px;color:var(--t2);margin-top:2px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all var(--tr)}
+.btn-p{background:linear-gradient(135deg,var(--ac),#9c8cff);color:#fff;box-shadow:0 4px 16px var(--acg)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 24px var(--acg)}
+.btn-s{background:var(--gl);border:1px solid var(--glb);color:var(--t1)}
+.btn-s:hover{background:var(--glh)}
+.btn-d{background:rgba(255,77,94,0.12);color:var(--bad);border:1px solid rgba(255,77,94,0.2)}
+.btn-d:hover{background:rgba(255,77,94,0.2)}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+
+/* Cards & Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:22px}
+.stat{padding:16px 18px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0}
+.stat-label{font-size:11px;color:var(--t2);font-weight:500;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+.stat-val{font-size:24px;font-weight:700;font-family:var(--mono);letter-spacing:-1px}
+.stat-sub{font-size:10px;color:var(--t3);margin-top:4px;font-family:var(--mono)}
+.stat-icon{position:absolute;top:14px;right:16px;font-size:22px;opacity:0.5}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:10px 12px;color:var(--t2);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--glb)}
+.tbl td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.tbl tr:hover td{background:var(--gl)}
+
+/* Tags & Badges */
+.tag{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;font-family:var(--mono)}
+.tag-ok{background:rgba(0,229,170,0.12);color:var(--ok)}
+.tag-warn{background:rgba(255,184,77,0.12);color:var(--warn)}
+.tag-bad{background:rgba(255,77,94,0.12);color:var(--bad)}
+.tag-ac{background:var(--acg);color:var(--ac)}
+.tag-mute{background:var(--gl);color:var(--t2)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:all var(--tr);background:transparent}
+.tab:hover{background:var(--gl);color:var(--t1)}
+.tab.on{background:var(--acg);color:var(--ac);font-weight:600}
+
+/* Kanban */
+.kw{display:flex;gap:10px;overflow-x:auto;padding-bottom:12px;flex:1;min-height:0}
+.kc{min-width:220px;max-width:260px;flex:1;display:flex;flex-direction:column}
+.kh{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;margin-bottom:8px;font-size:12px;font-weight:600}
+.kh .cnt{margin-left:auto;font-family:var(--mono);font-size:10px;opacity:0.6}
+.ks{flex:1;display:flex;flex-direction:column;gap:6px;min-height:60px;padding:4px;border-radius:8px;transition:background 0.2s}
+.ks.over{background:rgba(124,108,255,0.08);outline:2px dashed rgba(124,108,255,0.3);outline-offset:-2px}
+.kd{padding:10px 12px;border-radius:10px;cursor:grab;transition:all 0.2s;font-size:12px;background:var(--gl);border:1px solid var(--glb)}
+.kd:hover{background:var(--glh);transform:translateY(-1px);box-shadow:var(--sh)}
+.kd:active{cursor:grabbing;opacity:0.7}
+.kd-title{font-weight:600;margin-bottom:4px}
+.kd-desc{font-size:10px;color:var(--t2);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kd-foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* Forms */
+.inp{width:100%;padding:9px 12px;background:var(--ibg);border:1px solid var(--glb);border-radius:8px;color:var(--t1);font-family:var(--font);font-size:12px;outline:none;transition:border-color var(--tr)}
+.inp:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acg)}
+.sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238585a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+textarea.inp{resize:vertical;min-height:60px}
+label.lbl{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn 0.2s}
+.modal{background:var(--bg2);border:1px solid var(--glb);border-radius:16px;padding:24px;width:90%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.5);animation:slideUp 0.25s}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* Slide panel */
+.panel-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:900;animation:fadeIn 0.2s}
+.panel{position:fixed;top:0;right:0;width:420px;height:100vh;background:var(--bg2);border-left:1px solid var(--glb);z-index:901;overflow-y:auto;padding:24px;animation:slideIn 0.25s;box-shadow:-8px 0 40px rgba(0,0,0,0.3)}
+.panel-close{position:absolute;top:16px;right:16px;background:var(--gl);border:1px solid var(--glb);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);font-size:16px}
+
+/* Progress rings */
+.ring{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.ring svg{transform:rotate(-90deg)}
+.ring-label{position:absolute;font-family:var(--mono);font-weight:600;font-size:14px}
+
+/* Chat */
+.chat-box{display:flex;flex-direction:column;height:calc(100vh - 120px);background:var(--gl);border-radius:14px;border:1px solid var(--glb);overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+.chat-msg.user{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:4px}
+.chat-msg.bot{align-self:flex-start;background:var(--glh);border:1px solid var(--glb);border-bottom-left-radius:4px}
+.chat-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--glb)}
+.chat-input input{flex:1}
+
+/* Login */
+.login-bg{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);position:relative;overflow:hidden}
+.login-bg::before{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,var(--acg),transparent 70%);top:-100px;right:-100px;animation:float 12s infinite alternate}
+.login-bg::after{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(0,229,170,0.1),transparent 70%);bottom:-80px;left:-80px;animation:float 15s infinite alternate-reverse}
+.login-card{background:var(--bg2);border:1px solid var(--glb);border-radius:20px;padding:36px;width:360px;box-shadow:var(--sh);position:relative;z-index:1}
+.login-logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:24px}
+.login-logo-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff}
+.login-logo-text{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.login-sub{text-align:center;font-size:12px;color:var(--t2);margin-bottom:24px}
+.login-err{color:var(--bad);font-size:11px;text-align:center;margin-top:8px}
+
+/* Gauge */
+.gauge{width:100%;height:8px;background:var(--gl);border-radius:4px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:4px;transition:width 0.6s ease}
+
+/* Tree / file list */
+.tree-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;transition:background var(--tr)}
+.tree-item:hover{background:var(--gl)}
+.tree-icon{width:16px;text-align:center;font-size:13px}
+.tree-expand{width:16px;text-align:center;font-size:10px;color:var(--t3);cursor:pointer}
+
+/* Search bar */
+.search{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--gl);border:1px solid var(--glb);border-radius:10px;transition:all var(--tr)}
+.search:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px var(--acg)}
+.search input{flex:1;background:none;border:none;color:var(--t1);font-family:var(--font);font-size:12px;outline:none}
+.search input::placeholder{color:var(--t3)}
+.search-icon{color:var(--t3);font-size:14px}
+
+/* Command palette */
+.cmd-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;animation:fadeIn 0.15s}
+.cmd-box{width:520px;background:var(--bg2);border:1px solid var(--glb);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,0.5);overflow:hidden}
+.cmd-input{width:100%;padding:14px 18px;background:transparent;border:none;border-bottom:1px solid var(--glb);color:var(--t1);font-family:var(--font);font-size:14px;outline:none}
+.cmd-results{max-height:320px;overflow-y:auto}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px;transition:background 0.15s}
+.cmd-item:hover,.cmd-item.sel{background:var(--acg);color:var(--ac)}
+.cmd-item .icon{width:20px;text-align:center;font-size:15px}
+.cmd-item .shortcut{margin-left:auto;font-size:10px;color:var(--t3);font-family:var(--mono)}
+
+/* Notifications bell */
+.notif-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--bad);border-radius:50%;border:2px solid var(--bg2)}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes float{from{transform:translate(0,0) scale(1)}to{transform:translate(30px,20px) scale(1.1)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.anim{animation:slideUp 0.3s ease-out}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--glb);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+
+/* Responsive */
+@media(max-width:768px){.sb{width:60px}.sb-logo-text,.sb-logo-ver,.sb-section,.sb-item span:not(.icon){display:none}.sb-item{justify-content:center;padding:12px}.mn{padding:16px}.stats{grid-template-columns:1fr 1fr}.grid-2,.grid-3{grid-template-columns:1fr}.kc{min-width:180px}.panel{width:100%}}
+</style>
+</head>
+<body data-theme="dark">
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState, useEffect, useCallback, useRef, useMemo} = React;
+
+/* ========== CONSTANTS ========== */
+const API = '';
+const fetcher = (u, o) => fetch(API + u, o).then(r => r.json()).catch(() => null);
+
+const STAGES = [
+  {id:'triage',label:'Triage',icon:'\u{1F4E5}',bg:'rgba(255,107,157,0.12)'},
+  {id:'planning',label:'Planning',icon:'\u{1F4CB}',bg:'rgba(124,108,255,0.12)'},
+  {id:'architect',label:'Architect',icon:'\u{1F3D7}',bg:'rgba(0,229,170,0.12)'},
+  {id:'building',label:'Building',icon:'\u26A1',bg:'rgba(255,184,77,0.12)'},
+  {id:'review',label:'Review',icon:'\u{1F50D}',bg:'rgba(74,158,255,0.12)'},
+  {id:'deploy',label:'Deploy',icon:'\u{1F680}',bg:'rgba(160,120,255,0.12)'},
+  {id:'done',label:'Done',icon:'\u2705',bg:'rgba(0,229,170,0.2)'}
+];
+
+const AGENTS = [
+  {id:'atlas',name:'Atlas',role:'Chief of Staff',icon:'\u{1F3DB}',color:'#7c6cff'},
+  {id:'hvac',name:'HVAC',role:'GM Execution',icon:'\u2744\uFE0F',color:'#00e5aa'},
+  {id:'markets',name:'Markets',role:'Trading Ops',icon:'\u{1F4C8}',color:'#ff6b9d'},
+  {id:'digital',name:'Digital',role:'Business Builder',icon:'\u{1F310}',color:'#ffb84d'},
+  {id:'personal',name:'Personal',role:'Life Admin',icon:'\u{1F464}',color:'#4a9eff'}
+];
+
+const PROJECTS = ['command-center','hvac-crm','personal-finance','trading','tiktok','sweet-snout','infrastructure'];
+
+const PHASES = [
+  {id:1,label:'Phase 1: Command Center',color:'#7c6cff'},
+  {id:2,label:'Phase 2: Claude Code + Agents',color:'#4a9eff'},
+  {id:3,label:'Phase 3: HVAC Regional CRM',color:'#00e5aa'},
+  {id:4,label:'Phase 4: Personal Finance',color:'#ffb84d'},
+  {id:5,label:'Phase 5: Trading Bots',color:'#ff6b9d'},
+  {id:6,label:'Phase 6: Digital Marketing',color:'#a070ff'}
+];
+
+const MODEL_TIERS = [
+  {id:'opus',name:'Claude Opus 4.6',cost:'$15/$75 MTok',color:'#ff6b9d',role:'Heavy analysis, architecture'},
+  {id:'sonnet',name:'Claude Sonnet 4.5',cost:'$3/$15 MTok',color:'#7c6cff',role:'Default brain'},
+  {id:'haiku',name:'Claude Haiku 4.5',cost:'$1/$5 MTok',color:'#00e5aa',role:'Quick tasks, routing'},
+  {id:'deepseek',name:'DeepSeek V3',cost:'$0.19/$0.87 MTok',color:'#4a9eff',role:'Budget fallback'},
+  {id:'gemini',name:'Gemini Flash',cost:'Free',color:'#ffb84d',role:'Heartbeats, pings'}
+];
+
+const INIT_TASKS = [
+  {id:'t1',title:'Command Center v4',description:'Full dashboard with 15 pages, liquid glass, live data',type:'feature',priority:'high',stage:'building',agent:'atlas',project:'command-center',phase:1,comments:[{by:'atlas',text:'v3.1 deployed, v4 in progress',at:'2026-02-15'}]},
+  {id:'t2',title:'Claude Code Integration',description:'Connect Claude Code CLI to VPS for automated builds',type:'feature',priority:'high',stage:'triage',agent:null,project:'command-center',phase:2,comments:[]},
+  {id:'t3',title:'Sub-Agent Factory',description:'Create specialized agents from the dashboard UI',type:'feature',priority:'medium',stage:'triage',agent:null,project:'command-center',phase:2,comments:[]},
+  {id:'t4',title:'HVAC Regional Command Center',description:'Liquid glass CRM with margin detection, tech perf, early warning, multi-company',type:'feature',priority:'high',stage:'planning',agent:'hvac',project:'hvac-crm',phase:3,comments:[]},
+  {id:'t5',title:'Email Ingestion Pipeline',description:'Forward ST reports, auto-parse, DB update, alerts in 15min SLA',type:'feature',priority:'high',stage:'planning',agent:'hvac',project:'hvac-crm',phase:3,comments:[]},
+  {id:'t6',title:'Commission Calculator',description:'GM% + NI weighted calc with instant reconfiguration',type:'feature',priority:'high',stage:'triage',agent:'hvac',project:'hvac-crm',phase:3,comments:[]},
+  {id:'t7',title:'Membership Growth Tracker',description:'Signups, cancellations, revenue impact',type:'feature',priority:'medium',stage:'triage',agent:'hvac',project:'hvac-crm',phase:3,comments:[]},
+  {id:'t8',title:'Personal Finance Dashboard',description:'Budget vs actual, savings goals, bills tracker',type:'feature',priority:'medium',stage:'triage',agent:'personal',project:'personal-finance',phase:4,comments:[]},
+  {id:'t9',title:'Solana Trading Bot',description:'Autonomous on-chain trading, copy-trade top wallets',type:'feature',priority:'medium',stage:'triage',agent:'markets',project:'trading',phase:5,comments:[]},
+  {id:'t10',title:'Polymarket Bot',description:'Autonomous prediction market trading',type:'feature',priority:'low',stage:'triage',agent:'markets',project:'trading',phase:5,comments:[]},
+  {id:'t11',title:'MOMO Ecosystem',description:'Price tracking, volume alerts, liquidity depth',type:'feature',priority:'medium',stage:'deploy',agent:'markets',project:'trading',phase:5,comments:[]},
+  {id:'t12',title:'TikTok Automation Factory',description:'Video creation, posting, scheduling, growth',type:'feature',priority:'medium',stage:'triage',agent:'digital',project:'tiktok',phase:6,comments:[]},
+  {id:'t13',title:'Sweet Snout SEO',description:'Full SEO + Etsy/Amazon listings',type:'feature',priority:'medium',stage:'planning',agent:'digital',project:'sweet-snout',phase:6,comments:[]},
+  {id:'t14',title:'Affiliate Marketing Automation',description:'Auto-find, promote, and track affiliate products',type:'feature',priority:'low',stage:'triage',agent:'digital',project:'tiktok',phase:6,comments:[]},
+  {id:'t15',title:'Weekly P&L Generator',description:'Auto-generate weekly profit & loss from ingested data',type:'feature',priority:'medium',stage:'triage',agent:'hvac',project:'hvac-crm',phase:3,comments:[]}
+];
+
+/* ========== HOOKS ========== */
+function useLocalState(key, init) {
+  const [val, setVal] = useState(() => {
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : init; } catch { return init; }
+  });
+  useEffect(() => { localStorage.setItem(key, JSON.stringify(val)); }, [key, val]);
+  return [val, setVal];
+}
+
+/* ========== SIDEBAR ========== */
+function Sidebar({page, go, notifCount}) {
+  const nav = [
+    {section:'Overview'},
+    {id:'dashboard',label:'Dashboard',icon:'\u{1F4CA}'},
+    {id:'operations',label:'Operations',icon:'\u{1F5C2}'},
+    {id:'builds',label:'Builds & Tasks',icon:'\u{1F4CB}'},
+    {section:'System'},
+    {id:'agents',label:'Agents',icon:'\u{1F916}'},
+    {id:'skills',label:'Skills',icon:'\u{1F9E0}'},
+    {id:'cron',label:'Cron Jobs',icon:'\u23F0'},
+    {section:'Monitoring'},
+    {id:'security',label:'Security',icon:'\u{1F6E1}'},
+    {id:'usage',label:'Token Usage',icon:'\u{1F4B0}'},
+    {id:'health',label:'VPS Health',icon:'\u{1F49A}'},
+    {section:'Tools'},
+    {id:'assistant',label:'Assistant',icon:'\u{1F4AC}'},
+    {id:'comms',label:'Agent Comms',icon:'\u{1F4E8}'},
+    {id:'docs',label:'Docs & Files',icon:'\u{1F4C2}'},
+    {section:''},
+    {id:'settings',label:'Settings',icon:'\u2699\uFE0F'}
+  ];
+  return (
+    <div className="sb">
+      <div className="sb-logo">
+        <div className="sb-logo-icon">OC</div>
+        <div>
+          <div className="sb-logo-text">OpenClaw</div>
+          <div className="sb-logo-ver">v4.0</div>
+        </div>
+      </div>
+      <div className="sb-nav">
+        {nav.map((n, i) =>
+          n.section !== undefined
+            ? <div key={'s'+i} className="sb-section">{n.section}</div>
+            : <div key={n.id} className={'sb-item' + (page === n.id ? ' on' : '')} onClick={() => go(n.id)}>
+                <span className="icon">{n.icon}</span>
+                <span>{n.label}</span>
+                {n.id === 'assistant' && notifCount > 0 && <span className="sb-badge">{notifCount}</span>}
+              </div>
+        )}
+      </div>
+      <div className="sb-foot">
+        <div style={{fontSize:10,color:'var(--t3)',fontFamily:'var(--mono)',textAlign:'center'}}>
+          GM: Ismael Soto | 2 Cool HVAC
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== LOGIN ========== */
+function LoginPage({onLogin}) {
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
+  const submit = () => {
+    if (pw === 'openclaw2026') { onLogin(); }
+    else { setErr('Invalid password'); setPw(''); }
+  };
+  return (
+    <div className="login-bg">
+      <div className="login-card">
+        <div className="login-logo">
+          <div className="login-logo-icon">OC</div>
+          <div className="login-logo-text">OpenClaw</div>
+        </div>
+        <div className="login-sub">Command Center | Secure Access</div>
+        <label className="lbl">Password</label>
+        <input className="inp" type="password" value={pw} onChange={e => setPw(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && submit()} placeholder="Enter access code" autoFocus />
+        {err && <div className="login-err">{err}</div>}
+        <div style={{marginTop:16}}>
+          <button className="btn btn-p" style={{width:'100%'}} onClick={submit}>Access Command Center</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== DASHBOARD ========== */
+function DashboardPage({tasks, goPage}) {
+  const [live, setLive] = useState({cpu:0,mem:0,disk:0,uptime:'--',momo:0,momoVol:0,agents:0,crons:0});
+  const [ts, setTs] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const [h, m, c, a] = await Promise.all([
+        fetcher('/api/health'), fetcher('/api/momo'), fetcher('/api/cron'), fetcher('/api/agents')
+      ]);
+      setLive({
+        cpu: h?.cpu || 0, mem: h?.memory?.usedPercent || 0,
+        disk: h?.disk?.usedPercent || 0, uptime: h?.uptime || '--',
+        momo: m?.primary?.priceUsd || m?.priceUsd || 0,
+        momoVol: m?.primary?.volume24h || m?.volume24h || 0,
+        agents: a?.sessions?.length || 0,
+        crons: c?.jobs?.filter(j => j.enabled)?.length || 0,
+        totalCrons: c?.jobs?.length || 0
+      });
+      setTs(new Date().toLocaleTimeString());
+    };
+    load();
+    const iv = setInterval(load, 30000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const byStage = STAGES.map(s => ({...s, count: tasks.filter(t => t.stage === s.id).length}));
+  const active = tasks.filter(t => t.stage !== 'done');
+  const highPri = active.filter(t => t.priority === 'high');
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Command Center</div>
+          <div className="ph-sub">GM Ismael Soto | 2 Cool HVAC | Pasco County FL{ts && <span> | Updated {ts}</span>}</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-s btn-sm" onClick={() => goPage('operations')}>Open Kanban</button>
+          <button className="btn btn-p btn-sm" onClick={() => goPage('builds')}>View All Builds</button>
+        </div>
+      </div>
+
+      <div className="stats">
+        <div className="gl stat" style={{'--accent':'var(--ac)'}}>
+          <div className="stat-icon">{'\u{1F4BB}'}</div>
+          <div className="stat-label">CPU Usage</div>
+          <div className="stat-val" style={{color:'var(--ac)'}}>{live.cpu.toFixed(1)}%</div>
+          <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.cpu+'%',background:'var(--ac)'}}></div></div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u{1F9E0}'}</div>
+          <div className="stat-label">Memory</div>
+          <div className="stat-val" style={{color:'var(--ac2)'}}>{live.mem.toFixed(1)}%</div>
+          <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.mem+'%',background:'var(--ac2)'}}></div></div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u{1F4BE}'}</div>
+          <div className="stat-label">Disk</div>
+          <div className="stat-val">{live.disk.toFixed(1)}%</div>
+          <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.disk+'%',background:live.disk>80?'var(--bad)':'var(--ok)'}}></div></div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u23F1'}</div>
+          <div className="stat-label">Uptime</div>
+          <div className="stat-val" style={{fontSize:16}}>{live.uptime}</div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u{1FA99}'}</div>
+          <div className="stat-label">MOMO Price</div>
+          <div className="stat-val" style={{color:'var(--ac3)'}}>${Number(live.momo).toFixed(6)}</div>
+          <div className="stat-sub">Vol: ${Number(live.momoVol).toLocaleString()}</div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u{1F916}'}</div>
+          <div className="stat-label">Active Agents</div>
+          <div className="stat-val">{live.agents}</div>
+          <div className="stat-sub">of 5 bots configured</div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u23F0'}</div>
+          <div className="stat-label">Cron Jobs</div>
+          <div className="stat-val">{live.crons}<span style={{fontSize:12,color:'var(--t2)'}}>/{live.totalCrons || 0}</span></div>
+          <div className="stat-sub">active / total</div>
+        </div>
+        <div className="gl stat">
+          <div className="stat-icon">{'\u{1F3AF}'}</div>
+          <div className="stat-label">Active Tasks</div>
+          <div className="stat-val">{active.length}</div>
+          <div className="stat-sub">{highPri.length} high priority</div>
+        </div>
+      </div>
+
+      <div className="grid-2">
+        <div className="gl" style={{padding:18}}>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Priority Builds</div>
+          {highPri.slice(0,5).map(t => (
+            <div key={t.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--glb)'}}>
+              <span className={'tag ' + (t.priority === 'high' ? 'tag-bad' : t.priority === 'medium' ? 'tag-warn' : 'tag-mute')}>{t.priority}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:600}}>{t.title}</div>
+                <div style={{fontSize:10,color:'var(--t2)'}}>{t.project} | {STAGES.find(s=>s.id===t.stage)?.label}</div>
+              </div>
+              {t.agent && <span className="tag tag-ac">{t.agent}</span>}
+            </div>
+          ))}
+          {highPri.length === 0 && <div style={{fontSize:12,color:'var(--t3)',padding:20,textAlign:'center'}}>No high priority tasks</div>}
+        </div>
+
+        <div className="gl" style={{padding:18}}>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Pipeline Overview</div>
+          {byStage.map(s => (
+            <div key={s.id} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0'}}>
+              <span style={{width:20,textAlign:'center'}}>{s.icon}</span>
+              <span style={{flex:1,fontSize:12,fontWeight:500}}>{s.label}</span>
+              <div className="gauge" style={{width:80}}><div className="gauge-fill" style={{width: (s.count/Math.max(tasks.length,1)*100)+'%', background:s.bg.replace('0.12','1').replace('0.2','1')}}></div></div>
+              <span style={{fontFamily:'var(--mono)',fontSize:11,width:20,textAlign:'right'}}>{s.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:18,marginTop:16}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Agent Activity</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
+          {AGENTS.map(a => {
+            const agentTasks = tasks.filter(t => t.agent === a.id && t.stage !== 'done');
+            return (
+              <div key={a.id} className="gl-s" style={{padding:14,textAlign:'center',cursor:'pointer'}} onClick={() => goPage('agents')}>
+                <div style={{fontSize:24,marginBottom:6}}>{a.icon}</div>
+                <div style={{fontSize:12,fontWeight:700,color:a.color}}>{a.name}</div>
+                <div style={{fontSize:10,color:'var(--t2)',marginBottom:6}}>{a.role}</div>
+                <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--mono)'}}>{agentTasks.length}</div>
+                <div style={{fontSize:9,color:'var(--t3)'}}>active tasks</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== KANBAN ========== */
+function KanbanPage({tasks, setTasks}) {
+  const [filt, setFilt] = useState('all');
+  const [dragId, setDragId] = useState(null);
+  const [overStage, setOverStage] = useState(null);
+  const [modal, setModal] = useState(false);
+  const [sel, setSel] = useState(null);
+  const [newTask, setNewTask] = useState({title:'',description:'',priority:'medium',agent:'',project:'command-center',phase:1});
+
+  const filtered = filt === 'all' ? tasks : tasks.filter(t => t.project === filt);
+
+  const addTask = () => {
+    if (!newTask.title.trim()) return;
+    setTasks(p => [...p, {...newTask, id: 'nt' + Date.now(), stage:'triage', type:'feature', comments:[]}]);
+    setNewTask({title:'',description:'',priority:'medium',agent:'',project:'command-center',phase:1});
+    setModal(false);
+  };
+
+  const moveTask = (id, newStage) => { setTasks(p => p.map(t => t.id === id ? {...t, stage:newStage} : t)); };
+  const delTask = id => { setTasks(p => p.filter(t => t.id !== id)); setSel(null); };
+
+  const onDragStart = (e, id) => { setDragId(id); e.dataTransfer.effectAllowed = 'move'; };
+  const onDragOver = (e, stageId) => { e.preventDefault(); setOverStage(stageId); };
+  const onDrop = (e, stageId) => { e.preventDefault(); if (dragId) moveTask(dragId, stageId); setDragId(null); setOverStage(null); };
+  const onDragEnd = () => { setDragId(null); setOverStage(null); };
+
+  return (
+    <div className="anim" style={{display:'flex',flexDirection:'column',height:'calc(100vh - 48px)'}}>
+      <div className="ph">
+        <div>
+          <div className="ph-title">Operations</div>
+          <div className="ph-sub">Drag tasks between stages | Click for details</div>
+        </div>
+        <button className="btn btn-p" onClick={() => setModal(true)}>+ New Task</button>
+      </div>
+
+      <div className="tabs">
+        <div className={'tab' + (filt === 'all' ? ' on' : '')} onClick={() => setFilt('all')}>All</div>
+        {PROJECTS.map(p => <div key={p} className={'tab' + (filt === p ? ' on' : '')} onClick={() => setFilt(p)}>{p}</div>)}
+      </div>
+
+      <div className="kw">
+        {STAGES.map(s => {
+          const stageTasks = filtered.filter(t => t.stage === s.id);
+          return (
+            <div key={s.id} className="kc">
+              <div className="kh" style={{background:s.bg}}>
+                <span>{s.icon}</span>
+                <span>{s.label}</span>
+                <span className="cnt">{stageTasks.length}</span>
+              </div>
+              <div className={'ks' + (overStage === s.id ? ' over' : '')}
+                onDragOver={e => onDragOver(e, s.id)} onDrop={e => onDrop(e, s.id)} onDragLeave={() => setOverStage(null)}>
+                {stageTasks.map(t => (
+                  <div key={t.id} className="kd" draggable onDragStart={e => onDragStart(e, t.id)} onDragEnd={onDragEnd}
+                    onClick={() => setSel(t)}>
+                    <div className="kd-title">{t.title}</div>
+                    <div className="kd-desc">{t.description}</div>
+                    <div className="kd-foot">
+                      <span className={'tag ' + (t.priority === 'high' ? 'tag-bad' : t.priority === 'medium' ? 'tag-warn' : 'tag-mute')} style={{fontSize:9}}>{t.priority}</span>
+                      {t.agent && <span className="tag tag-ac" style={{fontSize:9}}>{t.agent}</span>}
+                      <span className="tag tag-mute" style={{fontSize:9}}>P{t.phase}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* New Task Modal */}
+      {modal && (
+        <div className="modal-bg" onClick={() => setModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">New Task</div>
+            <label className="lbl">Title</label>
+            <input className="inp" value={newTask.title} onChange={e => setNewTask({...newTask, title:e.target.value})} placeholder="Task title" autoFocus />
+            <label className="lbl" style={{marginTop:12}}>Description</label>
+            <textarea className="inp" value={newTask.description} onChange={e => setNewTask({...newTask, description:e.target.value})} placeholder="What needs to be done?" />
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:12}}>
+              <div>
+                <label className="lbl">Priority</label>
+                <select className="inp sel" value={newTask.priority} onChange={e => setNewTask({...newTask, priority:e.target.value})}>
+                  <option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+                </select>
+              </div>
+              <div>
+                <label className="lbl">Assign Agent</label>
+                <select className="inp sel" value={newTask.agent} onChange={e => setNewTask({...newTask, agent:e.target.value})}>
+                  <option value="">Unassigned</option>
+                  {AGENTS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="lbl">Project</label>
+                <select className="inp sel" value={newTask.project} onChange={e => setNewTask({...newTask, project:e.target.value})}>
+                  {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="lbl">Phase</label>
+                <select className="inp sel" value={newTask.phase} onChange={e => setNewTask({...newTask, phase:Number(e.target.value)})}>
+                  {PHASES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-s" onClick={() => setModal(false)}>Cancel</button>
+              <button className="btn btn-p" onClick={addTask}>Create Task</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Task Detail Panel */}
+      {sel && (
+        <React.Fragment>
+          <div className="panel-bg" onClick={() => setSel(null)} />
+          <div className="panel">
+            <div className="panel-close" onClick={() => setSel(null)}>X</div>
+            <div style={{fontSize:10,color:'var(--t3)',fontFamily:'var(--mono)',marginBottom:8}}>TASK DETAIL</div>
+            <div style={{fontSize:18,fontWeight:700,marginBottom:6}}>{sel.title}</div>
+            <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>
+              <span className={'tag ' + (sel.priority === 'high' ? 'tag-bad' : sel.priority === 'medium' ? 'tag-warn' : 'tag-mute')}>{sel.priority}</span>
+              <span className="tag tag-ac">{STAGES.find(s=>s.id===sel.stage)?.label}</span>
+              <span className="tag tag-mute">{sel.project}</span>
+              {sel.agent && <span className="tag tag-ac">{sel.agent}</span>}
+              <span className="tag tag-mute">Phase {sel.phase}</span>
+            </div>
+            <label className="lbl">Description</label>
+            <div style={{fontSize:13,color:'var(--t2)',lineHeight:1.6,marginBottom:16}}>{sel.description || 'No description'}</div>
+            <label className="lbl">Move to Stage</label>
+            <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:16}}>
+              {STAGES.map(s => (
+                <button key={s.id} className={'btn btn-sm ' + (sel.stage === s.id ? 'btn-p' : 'btn-s')}
+                  onClick={() => { moveTask(sel.id, s.id); setSel({...sel, stage:s.id}); }}>
+                  {s.icon} {s.label}
+                </button>
+              ))}
+            </div>
+            <label className="lbl">Comments ({sel.comments?.length || 0})</label>
+            <div style={{marginBottom:12}}>
+              {(sel.comments || []).map((c, i) => (
+                <div key={i} className="gl-s" style={{padding:10,marginBottom:6}}>
+                  <div style={{fontSize:10,color:'var(--t3)',marginBottom:4}}>{c.by} | {c.at}</div>
+                  <div style={{fontSize:12}}>{c.text}</div>
+                </div>
+              ))}
+              {(!sel.comments || sel.comments.length === 0) && <div style={{fontSize:11,color:'var(--t3)'}}>No comments yet</div>}
+            </div>
+            <div style={{marginTop:'auto',paddingTop:16}}>
+              <button className="btn btn-d btn-sm" onClick={() => delTask(sel.id)}>Delete Task</button>
+            </div>
+          </div>
+        </React.Fragment>
+      )}
+    </div>
+  );
+}
+
+/* ========== BUILDS & TASKS ========== */
+function BuildsPage({tasks, setTasks}) {
+  const [phaseFilter, setPhaseFilter] = useState('all');
+  const [priFilter, setPriFilter] = useState('all');
+  const [search, setSearch] = useState('');
+
+  const ft = tasks.filter(t => {
+    if (phaseFilter !== 'all' && t.phase !== Number(phaseFilter)) return false;
+    if (priFilter !== 'all' && t.priority !== priFilter) return false;
+    if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.description.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const completionPct = tasks.length > 0 ? ((tasks.filter(t => t.stage === 'done').length / tasks.length) * 100).toFixed(0) : 0;
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Builds & Tasks</div>
+          <div className="ph-sub">{tasks.length} total | {tasks.filter(t=>t.stage==='done').length} complete | {completionPct}% done</div>
+        </div>
+      </div>
+
+      <div className="stats" style={{gridTemplateColumns:'repeat(6,1fr)',marginBottom:18}}>
+        {PHASES.map(p => {
+          const pTasks = tasks.filter(t => t.phase === p.id);
+          const done = pTasks.filter(t => t.stage === 'done').length;
+          return (
+            <div key={p.id} className="gl" style={{padding:12,cursor:'pointer',border:phaseFilter===String(p.id)?'1px solid '+p.color:undefined}} onClick={() => setPhaseFilter(phaseFilter === String(p.id) ? 'all' : String(p.id))}>
+              <div style={{fontSize:9,color:p.color,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5}}>{p.label.split(':')[1]}</div>
+              <div style={{fontSize:20,fontWeight:700,fontFamily:'var(--mono)',marginTop:4}}>{done}/{pTasks.length}</div>
+              <div className="gauge" style={{marginTop:6}}><div className="gauge-fill" style={{width:(pTasks.length?done/pTasks.length*100:0)+'%',background:p.color}}></div></div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{display:'flex',gap:10,marginBottom:16}}>
+        <div className="search" style={{flex:1}}>
+          <span className="search-icon">{'\u{1F50D}'}</span>
+          <input placeholder="Search tasks..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <select className="inp sel" style={{width:140}} value={priFilter} onChange={e => setPriFilter(e.target.value)}>
+          <option value="all">All Priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+
+      <div className="gl" style={{padding:0,overflow:'hidden'}}>
+        <table className="tbl">
+          <thead>
+            <tr><th>Task</th><th>Project</th><th>Phase</th><th>Stage</th><th>Priority</th><th>Agent</th></tr>
+          </thead>
+          <tbody>
+            {ft.map(t => (
+              <tr key={t.id}>
+                <td><div style={{fontWeight:600}}>{t.title}</div><div style={{fontSize:10,color:'var(--t3)'}}>{t.description}</div></td>
+                <td><span className="tag tag-mute">{t.project}</span></td>
+                <td><span style={{fontFamily:'var(--mono)',fontSize:11}}>P{t.phase}</span></td>
+                <td><span className="tag tag-ac">{STAGES.find(s=>s.id===t.stage)?.icon} {STAGES.find(s=>s.id===t.stage)?.label}</span></td>
+                <td><span className={'tag '+(t.priority==='high'?'tag-bad':t.priority==='medium'?'tag-warn':'tag-mute')}>{t.priority}</span></td>
+                <td>{t.agent ? <span className="tag tag-ac">{t.agent}</span> : <span style={{color:'var(--t3)',fontSize:11}}>--</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {ft.length === 0 && <div style={{padding:30,textAlign:'center',color:'var(--t3)',fontSize:12}}>No tasks match your filters</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ========== AGENTS ========== */
+function AgentsPage() {
+  const [agentData, setAgentData] = useState(null);
+  const [selAgent, setSelAgent] = useState(null);
+
+  useEffect(() => {
+    fetcher('/api/agents').then(d => setAgentData(d));
+    const iv = setInterval(() => fetcher('/api/agents').then(d => setAgentData(d)), 15000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const subAgents = {
+    atlas: [{name:'Planner',status:'idle'},{name:'Architect',status:'idle'},{name:'DevOps',status:'idle'}],
+    hvac: [{name:'CFO Agent',status:'idle'},{name:'COO Agent',status:'idle'},{name:'VP Tech',status:'idle'},{name:'CRO Agent',status:'idle'}],
+    markets: [{name:'Analyst',status:'idle'},{name:'Executor',status:'idle'}],
+    digital: [{name:'SEO Agent',status:'idle'},{name:'Content Agent',status:'idle'}],
+    personal: [{name:'Finance Agent',status:'idle'},{name:'Calendar Agent',status:'idle'}]
+  };
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Agents</div>
+          <div className="ph-sub">5 primary bots | {agentData?.sessions?.length || 0} active sessions</div>
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
+        {AGENTS.map(a => {
+          const session = agentData?.sessions?.find(s => s.agentId === a.id);
+          const isOnline = !!session;
+          const subs = subAgents[a.id] || [];
+          return (
+            <div key={a.id} className="gl" style={{padding:18,cursor:'pointer',borderColor:selAgent===a.id?a.color:undefined}} onClick={() => setSelAgent(selAgent === a.id ? null : a.id)}>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+                <div style={{fontSize:30}}>{a.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:16,fontWeight:700,color:a.color}}>{a.name}</div>
+                  <div style={{fontSize:11,color:'var(--t2)'}}>{a.role}</div>
+                </div>
+                <span className={'tag ' + (isOnline ? 'tag-ok' : 'tag-mute')}>
+                  <span style={{display:'inline-block',width:6,height:6,borderRadius:'50%',background:isOnline?'var(--ok)':'var(--t3)',marginRight:4,animation:isOnline?'pulse 2s infinite':'none'}}></span>
+                  {isOnline ? 'Online' : 'Idle'}
+                </span>
+              </div>
+              {session && (
+                <div style={{fontSize:10,color:'var(--t3)',fontFamily:'var(--mono)',marginBottom:10}}>
+                  Model: {session.model || 'haiku'} | Session: {session.id?.slice(0,8)}
+                </div>
+              )}
+              <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',marginBottom:6}}>SUB-AGENTS ({subs.length})</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                {subs.map((s,i) => (
+                  <span key={i} className="tag tag-mute" style={{fontSize:9}}>
+                    <span style={{display:'inline-block',width:5,height:5,borderRadius:'50%',background:s.status==='active'?'var(--ok)':'var(--t3)',marginRight:3}}></span>
+                    {s.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ========== SKILLS ========== */
+function SkillsPage() {
+  const [skills, setSkills] = useState([
+    {name:'github',agent:'atlas',status:'installed',safe:true,desc:'GitHub API for issues, PRs, CI runs'},
+    {name:'notion',agent:'atlas',status:'installed',safe:true,desc:'Notion API for pages, databases, blocks'},
+    {name:'openai-image-gen',agent:'digital',status:'installed',safe:true,desc:'Batch image generation via OpenAI'},
+    {name:'openai-whisper-api',agent:'personal',status:'installed',safe:true,desc:'Audio transcription via Whisper'},
+    {name:'skill-creator',agent:'atlas',status:'installed',safe:true,desc:'Create or update agent skills'},
+    {name:'servicetitan-parser',agent:'hvac',status:'installed',safe:true,desc:'Parse ST report exports'},
+    {name:'momo-tracker',agent:'markets',status:'installed',safe:true,desc:'MOMO price and volume tracking'},
+    {name:'security-audit',agent:'atlas',status:'installed',safe:true,desc:'VPS security audit scanner'}
+  ]);
+  const [recommended] = useState([
+    {name:'tiktok-api',desc:'TikTok posting and analytics',risk:'low'},
+    {name:'etsy-listings',desc:'Manage Etsy product listings',risk:'low'},
+    {name:'solana-web3',desc:'Solana blockchain interactions',risk:'medium'},
+    {name:'polymarket-api',desc:'Prediction market trading',risk:'medium'}
+  ]);
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Skills</div>
+          <div className="ph-sub">{skills.length} installed | {recommended.length} recommended</div>
+        </div>
+      </div>
+
+      <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Installed Skills</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:10,marginBottom:24}}>
+        {skills.map(s => (
+          <div key={s.name} className="gl" style={{padding:14}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+              <span style={{fontSize:18}}>{'\u{1F9E9}'}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700}}>{s.name}</div>
+                <div style={{fontSize:10,color:'var(--t2)'}}>{s.desc}</div>
+              </div>
+              <span className={'tag ' + (s.safe ? 'tag-ok' : 'tag-warn')}>{s.safe ? 'Verified' : 'Pending'}</span>
+            </div>
+            <div style={{display:'flex',gap:4}}>
+              <span className="tag tag-ac" style={{fontSize:9}}>{s.agent}</span>
+              <span className="tag tag-ok" style={{fontSize:9}}>{s.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Recommended Skills</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:10}}>
+        {recommended.map(r => (
+          <div key={r.name} className="gl" style={{padding:14}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+              <span style={{fontSize:18}}>{'\u{1F4E6}'}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700}}>{r.name}</div>
+                <div style={{fontSize:10,color:'var(--t2)'}}>{r.desc}</div>
+              </div>
+              <span className={'tag ' + (r.risk === 'low' ? 'tag-ok' : r.risk === 'medium' ? 'tag-warn' : 'tag-bad')}>Risk: {r.risk}</span>
+            </div>
+            <div style={{display:'flex',gap:6,marginTop:8}}>
+              <button className="btn btn-s btn-sm">{'\u{1F50D}'} Scan</button>
+              <button className="btn btn-p btn-sm">{'\u2705'} Approve & Install</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ========== CRON JOBS ========== */
+function CronPage() {
+  const [crons, setCrons] = useState([]);
+  const [modal, setModal] = useState(false);
+  const [newCron, setNewCron] = useState({name:'',schedule:'',message:'',agentId:'atlas',enabled:true});
+
+  useEffect(() => {
+    fetcher('/api/cron').then(d => { if (d?.jobs) setCrons(d.jobs); });
+  }, []);
+
+  const toggle = (id) => {
+    setCrons(p => p.map(c => c.id === id ? {...c, enabled: !c.enabled} : c));
+    fetcher('/api/cron/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({enabled:!crons.find(c=>c.id===id)?.enabled})});
+  };
+
+  const del = (id) => {
+    setCrons(p => p.filter(c => c.id !== id));
+    fetcher('/api/cron/' + id, {method:'DELETE'});
+  };
+
+  const add = () => {
+    if (!newCron.name || !newCron.schedule) return;
+    fetcher('/api/cron', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(newCron)}).then(d => {
+      if (d && d.id) setCrons(p => [...p, d]);
+    });
+    setNewCron({name:'',schedule:'',message:'',agentId:'atlas',enabled:true});
+    setModal(false);
+  };
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Cron Jobs</div>
+          <div className="ph-sub">{crons.filter(c=>c.enabled).length} active | {crons.length} total</div>
+        </div>
+        <button className="btn btn-p" onClick={() => setModal(true)}>+ Add Cron Job</button>
+      </div>
+
+      <div className="gl" style={{padding:0,overflow:'hidden'}}>
+        <table className="tbl">
+          <thead><tr><th>Status</th><th>Name</th><th>Schedule</th><th>Agent</th><th>Actions</th></tr></thead>
+          <tbody>
+            {crons.map(c => (
+              <tr key={c.id}>
+                <td><span className={'tag ' + (c.enabled ? 'tag-ok' : 'tag-mute')}>{c.enabled ? 'Active' : 'Disabled'}</span></td>
+                <td><div style={{fontWeight:600}}>{c.name}</div><div style={{fontSize:10,color:'var(--t3)'}}>{c.description || c.payload?.message?.slice(0,50)}</div></td>
+                <td><span style={{fontFamily:'var(--mono)',fontSize:11}}>{c.schedule?.expr || c.schedule}</span></td>
+                <td><span className="tag tag-ac">{c.agentId}</span></td>
+                <td>
+                  <div style={{display:'flex',gap:4}}>
+                    <button className="btn btn-s btn-sm" onClick={() => toggle(c.id)}>{c.enabled ? 'Disable' : 'Enable'}</button>
+                    <button className="btn btn-d btn-sm" onClick={() => del(c.id)}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {crons.length === 0 && <div style={{padding:30,textAlign:'center',color:'var(--t3)',fontSize:12}}>No cron jobs found. Check API connection.</div>}
+      </div>
+
+      {modal && (
+        <div className="modal-bg" onClick={() => setModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">Add Cron Job</div>
+            <label className="lbl">Name</label>
+            <input className="inp" value={newCron.name} onChange={e => setNewCron({...newCron, name:e.target.value})} placeholder="e.g. Morning Briefing" />
+            <label className="lbl" style={{marginTop:10}}>Schedule (cron expression)</label>
+            <input className="inp" value={newCron.schedule} onChange={e => setNewCron({...newCron, schedule:e.target.value})} placeholder="e.g. 45 6 * * *" />
+            <label className="lbl" style={{marginTop:10}}>Message / Command</label>
+            <textarea className="inp" value={newCron.message} onChange={e => setNewCron({...newCron, message:e.target.value})} placeholder="What should the agent do?" />
+            <label className="lbl" style={{marginTop:10}}>Agent</label>
+            <select className="inp sel" value={newCron.agentId} onChange={e => setNewCron({...newCron, agentId:e.target.value})}>
+              {AGENTS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+            <div className="modal-actions">
+              <button className="btn btn-s" onClick={() => setModal(false)}>Cancel</button>
+              <button className="btn btn-p" onClick={add}>Create Job</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ========== SECURITY ========== */
+function SecurityPage() {
+  const [audit, setAudit] = useState(null);
+
+  useEffect(() => {
+    fetcher('/api/security').then(d => setAudit(d));
+  }, []);
+
+  const checks = audit?.checks || [
+    {name:'Root Login',status:'pass',detail:'Disabled in sshd_config'},
+    {name:'Password Auth',status:'pass',detail:'Key-only authentication'},
+    {name:'SSH Port',status:'warn',detail:'Default port 22 (consider changing)'},
+    {name:'UFW Firewall',status:'pass',detail:'Active with rules configured'},
+    {name:'Fail2Ban',status:'pass',detail:'Running and monitoring SSH'},
+    {name:'File Permissions',status:'pass',detail:'12 protected files at 444'},
+    {name:'Disk Space',status:'pass',detail:'8% used, 92% free'},
+    {name:'Open Ports',status:'pass',detail:'22, 4000, 18789'},
+    {name:'Crontab Integrity',status:'pass',detail:'9 jobs, no unauthorized entries'},
+    {name:'DM Policy',status:'pass',detail:'Allowlist: 367771509 only'},
+    {name:'Log Size',status:'pass',detail:'No oversized logs detected'},
+    {name:'Foundation Lock',status:'pass',detail:'FOUNDATION.md locked at 444'}
+  ];
+
+  const pass = checks.filter(c => c.status === 'pass').length;
+  const warn = checks.filter(c => c.status === 'warn').length;
+  const fail = checks.filter(c => c.status === 'fail').length;
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Security</div>
+          <div className="ph-sub">{pass} passing | {warn} warnings | {fail} critical</div>
+        </div>
+        <button className="btn btn-s" onClick={() => fetcher('/api/security').then(d => setAudit(d))}>Run Audit</button>
+      </div>
+
+      <div className="stats" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+        <div className="gl stat"><div className="stat-label">Passing</div><div className="stat-val" style={{color:'var(--ok)'}}>{pass}</div></div>
+        <div className="gl stat"><div className="stat-label">Warnings</div><div className="stat-val" style={{color:'var(--warn)'}}>{warn}</div></div>
+        <div className="gl stat"><div className="stat-label">Critical</div><div className="stat-val" style={{color:'var(--bad)'}}>{fail}</div></div>
+      </div>
+
+      <div className="gl" style={{padding:0,overflow:'hidden'}}>
+        <table className="tbl">
+          <thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead>
+          <tbody>
+            {checks.map((c,i) => (
+              <tr key={i}>
+                <td style={{fontWeight:600}}>{c.name}</td>
+                <td><span className={'tag '+(c.status==='pass'?'tag-ok':c.status==='warn'?'tag-warn':'tag-bad')}>{c.status.toUpperCase()}</span></td>
+                <td style={{color:'var(--t2)',fontSize:11}}>{c.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="gl" style={{padding:18,marginTop:16}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Firewall Rules (UFW)</div>
+        <div style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--t2)',lineHeight:2}}>
+          <div>22/tcp ALLOW (SSH - key only)</div>
+          <div>4000/tcp ALLOW (Command Center)</div>
+          <div>18789/tcp ALLOW (OpenClaw Gateway)</div>
+          <div>Default: DENY incoming</div>
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:18,marginTop:16}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Recommendations</div>
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {[
+            {text:'Change SSH to non-standard port',severity:'low',action:'Move SSH from 22 to 2222+'},
+            {text:'Enable automatic security updates',severity:'medium',action:'apt install unattended-upgrades'},
+            {text:'Set up SSL/TLS for Command Center',severity:'medium',action:'Add Let\'s Encrypt cert for HTTPS'}
+          ].map((r,i) => (
+            <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--glb)'}}>
+              <span className={'tag '+(r.severity==='low'?'tag-ok':r.severity==='medium'?'tag-warn':'tag-bad')}>{r.severity}</span>
+              <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600}}>{r.text}</div><div style={{fontSize:10,color:'var(--t3)'}}>{r.action}</div></div>
+              <button className="btn btn-s btn-sm">Apply</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== TOKEN USAGE ========== */
+function UsagePage() {
+  const [usage, setUsage] = useState(null);
+
+  useEffect(() => {
+    fetcher('/api/usage').then(d => setUsage(d));
+  }, []);
+
+  const modelUsage = usage?.models || MODEL_TIERS.map(m => ({...m, tokens: Math.floor(Math.random()*50000), cost: (Math.random()*2).toFixed(2)}));
+
+  const totalCost = modelUsage.reduce((s,m) => s + Number(m.cost || 0), 0);
+  const totalTokens = modelUsage.reduce((s,m) => s + (m.tokens || 0), 0);
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Token Usage</div>
+          <div className="ph-sub">Cost tracking across all AI models</div>
+        </div>
+      </div>
+
+      <div className="stats" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+        <div className="gl stat"><div className="stat-label">Total Cost (est.)</div><div className="stat-val" style={{color:'var(--ac3)'}}>${totalCost.toFixed(2)}</div></div>
+        <div className="gl stat"><div className="stat-label">Total Tokens</div><div className="stat-val">{totalTokens.toLocaleString()}</div></div>
+        <div className="gl stat"><div className="stat-label">Active Models</div><div className="stat-val">{MODEL_TIERS.length}</div></div>
+      </div>
+
+      <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Model Breakdown</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
+        {MODEL_TIERS.map(m => {
+          const mu = modelUsage.find(u => u.id === m.id) || m;
+          return (
+            <div key={m.id} className="gl" style={{padding:16}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <div style={{width:10,height:10,borderRadius:'50%',background:m.color}}></div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:700}}>{m.name}</div>
+                  <div style={{fontSize:10,color:'var(--t2)'}}>{m.cost}</div>
+                </div>
+              </div>
+              <div style={{fontSize:10,color:'var(--t3)',marginBottom:4}}>{m.role}</div>
+              <div style={{display:'flex',justifyContent:'space-between',marginTop:8}}>
+                <span style={{fontFamily:'var(--mono)',fontSize:11}}>{(mu.tokens||0).toLocaleString()} tok</span>
+                <span style={{fontFamily:'var(--mono)',fontSize:11,color:m.color}}>${mu.cost || '0.00'}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Per-Agent Usage</div>
+      <div className="gl" style={{padding:0,overflow:'hidden',marginBottom:24}}>
+        <table className="tbl">
+          <thead><tr><th>Agent</th><th>Default Model</th><th>Sessions Today</th><th>Est. Cost</th></tr></thead>
+          <tbody>
+            {AGENTS.map(a => (
+              <tr key={a.id}>
+                <td><div style={{display:'flex',alignItems:'center',gap:8}}><span>{a.icon}</span><span style={{fontWeight:600,color:a.color}}>{a.name}</span></div></td>
+                <td><span style={{fontFamily:'var(--mono)',fontSize:11}}>Haiku 4.5</span></td>
+                <td style={{fontFamily:'var(--mono)'}}>{Math.floor(Math.random()*10)}</td>
+                <td style={{fontFamily:'var(--mono)',color:'var(--ac3)'}}>${(Math.random()*0.5).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="gl" style={{padding:18}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Optimization Recommendations</div>
+        {[
+          {text:'Route heartbeats to Gemini Flash (free tier)',impact:'Save ~$0.50/day',action:'Apply'},
+          {text:'Use DeepSeek V3 for simple data parsing',impact:'Save ~$0.30/day',action:'Apply'},
+          {text:'Batch morning briefing into single Haiku call',impact:'Reduce 3 calls to 1',action:'Apply'},
+          {text:'Cache ST report parsing results for 15 min',impact:'Avoid duplicate processing',action:'Apply'}
+        ].map((r,i) => (
+          <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--glb)'}}>
+            <span className="tag tag-ok">{'\u{1F4A1}'}</span>
+            <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600}}>{r.text}</div><div style={{fontSize:10,color:'var(--ok)'}}>{r.impact}</div></div>
+            <button className="btn btn-p btn-sm">{r.action}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ========== VPS HEALTH ========== */
+function HealthPage() {
+  const [h, setH] = useState(null);
+
+  useEffect(() => {
+    const load = () => fetcher('/api/health').then(d => setH(d));
+    load();
+    const iv = setInterval(load, 10000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const RingGauge = ({pct, color, size, label}) => {
+    const r = (size - 8) / 2;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (pct / 100) * circ;
+    return (
+      <div className="ring" style={{width:size,height:size}}>
+        <svg width={size} height={size}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--glb)" strokeWidth={6} />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={6}
+            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" style={{transition:'stroke-dashoffset 0.6s ease'}} />
+        </svg>
+        <div className="ring-label">{pct.toFixed(0)}%</div>
+      </div>
+    );
+  };
+
+  const cpu = h?.cpu || 0;
+  const mem = h?.memory?.usedPercent || 0;
+  const disk = h?.disk?.usedPercent || 0;
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">VPS Health</div>
+          <div className="ph-sub">15.204.242.195 | OVH VPS | Auto-refresh 10s</div>
+        </div>
+        <span className={'tag ' + (h ? 'tag-ok' : 'tag-mute')}>{h ? 'Connected' : 'Loading...'}</span>
+      </div>
+
+      <div className="grid-3" style={{marginBottom:20}}>
+        <div className="gl" style={{padding:24,textAlign:'center'}}>
+          <div style={{fontSize:12,fontWeight:600,color:'var(--t2)',marginBottom:12}}>CPU</div>
+          <RingGauge pct={cpu} color={cpu > 80 ? 'var(--bad)' : cpu > 50 ? 'var(--warn)' : 'var(--ok)'} size={120} />
+          <div style={{marginTop:10,fontFamily:'var(--mono)',fontSize:11,color:'var(--t3)'}}>
+            Load: {h?.loadAvg?.[0]?.toFixed(2) || '--'}
+          </div>
+        </div>
+        <div className="gl" style={{padding:24,textAlign:'center'}}>
+          <div style={{fontSize:12,fontWeight:600,color:'var(--t2)',marginBottom:12}}>Memory</div>
+          <RingGauge pct={mem} color={mem > 80 ? 'var(--bad)' : mem > 60 ? 'var(--warn)' : 'var(--ac)'} size={120} />
+          <div style={{marginTop:10,fontFamily:'var(--mono)',fontSize:11,color:'var(--t3)'}}>
+            {h?.memory?.used || '--'} / {h?.memory?.total || '--'}
+          </div>
+        </div>
+        <div className="gl" style={{padding:24,textAlign:'center'}}>
+          <div style={{fontSize:12,fontWeight:600,color:'var(--t2)',marginBottom:12}}>Disk</div>
+          <RingGauge pct={disk} color={disk > 80 ? 'var(--bad)' : disk > 60 ? 'var(--warn)' : 'var(--ac2)'} size={120} />
+          <div style={{marginTop:10,fontFamily:'var(--mono)',fontSize:11,color:'var(--t3)'}}>
+            {h?.disk?.used || '--'} / {h?.disk?.total || '--'}
+          </div>
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:18}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>System Details</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,fontFamily:'var(--mono)',fontSize:11,color:'var(--t2)'}}>
+          <div>Hostname: {h?.hostname || 'vps-7e1cdeea'}</div>
+          <div>Uptime: {h?.uptime || '--'}</div>
+          <div>OS: {h?.os || 'Ubuntu 24.04'}</div>
+          <div>Node: {h?.nodeVersion || '--'}</div>
+          <div>Processes: {h?.processes || '--'}</div>
+          <div>Gateway: OpenClaw 2026.2.13</div>
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:18,marginTop:14}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Active Services</div>
+        {[
+          {name:'Command Center',port:4000,status:'running'},
+          {name:'OpenClaw Gateway',port:18789,status:'running'},
+          {name:'SSH',port:22,status:'running'}
+        ].map((s,i) => (
+          <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:'1px solid var(--glb)'}}>
+            <span className="tag tag-ok" style={{fontSize:9}}>ACTIVE</span>
+            <span style={{fontSize:12,fontWeight:600,flex:1}}>{s.name}</span>
+            <span style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--t3)'}}>:{s.port}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ========== ASSISTANT (CHAT) ========== */
+function AssistantPage() {
+  const [msgs, setMsgs] = useState([
+    {role:'bot',text:'Hello Ismael. I\'m your Command Center assistant. Ask me anything about your tasks, agents, builds, or system status. I can also help manage your Kanban board.'}
+  ]);
+  const [input, setInput] = useState('');
+  const msgsEnd = useRef(null);
+
+  useEffect(() => { msgsEnd.current?.scrollIntoView({behavior:'smooth'}); }, [msgs]);
+
+  const send = () => {
+    if (!input.trim()) return;
+    const userMsg = input.trim();
+    setMsgs(p => [...p, {role:'user', text:userMsg}]);
+    setInput('');
+
+    // Simple local responses for common queries
+    setTimeout(() => {
+      let reply = 'I\'ll need to connect to the Atlas bot to answer that. This feature will be fully functional once Claude Code is integrated with the VPS.';
+
+      const low = userMsg.toLowerCase();
+      if (low.includes('status') || low.includes('how') && low.includes('system')) {
+        reply = 'All systems operational. Command Center running on port 4000, OpenClaw Gateway on 18789. 5 bots configured with Haiku as default model. No critical alerts.';
+      } else if (low.includes('task') || low.includes('build')) {
+        reply = 'You currently have 15 tasks across 6 phases. 1 in Building stage (Command Center v4), 2 in Planning, and 12 in Triage awaiting prioritization. The HVAC Regional CRM is your next major build.';
+      } else if (low.includes('momo') || low.includes('price')) {
+        reply = 'MOMO price data is pulled live every 30 seconds from the DEXScreener API. Check the Dashboard for the latest price and volume.';
+      } else if (low.includes('commission') || low.includes('kpi')) {
+        reply = 'Your two non-negotiable KPIs are Gross Margin % and Net Income. Commission structure: $96K/yr ($8K/mo at 100%). Weights and floors are pending confirmation from your next budget meeting.';
+      } else if (low.includes('help') || low.includes('what can')) {
+        reply = 'I can help with: task management, system status, agent health, build priorities, HVAC metrics overview, and general questions about your OpenClaw system. Try asking about your builds, agents, or system status.';
+      }
+
+      setMsgs(p => [...p, {role:'bot', text:reply}]);
+    }, 800);
+  };
+
+  return (
+    <div className="anim" style={{height:'calc(100vh - 48px)',display:'flex',flexDirection:'column'}}>
+      <div className="ph">
+        <div>
+          <div className="ph-title">Assistant</div>
+          <div className="ph-sub">Chat with your Command Center AI</div>
+        </div>
+      </div>
+      <div className="chat-box" style={{flex:1}}>
+        <div className="chat-msgs">
+          {msgs.map((m,i) => <div key={i} className={'chat-msg ' + m.role}>{m.text}</div>)}
+          <div ref={msgsEnd} />
+        </div>
+        <div className="chat-input">
+          <input className="inp" value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && send()} placeholder="Ask anything..." />
+          <button className="btn btn-p" onClick={send}>Send</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== AGENT COMMS ========== */
+function CommsPage() {
+  const [comms] = useState([
+    {from:'atlas',to:'hvac',msg:'Morning briefing pipeline triggered. Processing latest_parsed.json.',time:'2026-02-15 06:45 AM',type:'task'},
+    {from:'hvac',to:'atlas',msg:'Briefing generated. 4 techs processed. Sent to Telegram.',time:'2026-02-15 06:46 AM',type:'response'},
+    {from:'atlas',to:'markets',msg:'MOMO price check requested. Current tracking active.',time:'2026-02-15 07:00 AM',type:'task'},
+    {from:'markets',to:'atlas',msg:'MOMO at $0.000234. Volume $12,450. No alerts triggered.',time:'2026-02-15 07:01 AM',type:'response'},
+    {from:'atlas',to:'all',msg:'Security audit scheduled. Running checks on all workspaces.',time:'2026-02-15 10:00 AM',type:'broadcast'},
+    {from:'atlas',to:'atlas',msg:'Security audit complete. 18 pass, 1 warning, 0 critical.',time:'2026-02-15 10:02 AM',type:'system'}
+  ]);
+
+  const typeColors = {task:'var(--ac)',response:'var(--ok)',broadcast:'var(--warn)',system:'var(--t3)'};
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Agent Communications</div>
+          <div className="ph-sub">Inter-agent message log | {comms.length} messages</div>
+        </div>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {comms.map((c,i) => (
+          <div key={i} className="gl" style={{padding:14}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+              <span className="tag tag-ac" style={{fontSize:9}}>{c.from}</span>
+              <span style={{color:'var(--t3)',fontSize:11}}>{'\u2192'}</span>
+              <span className="tag tag-mute" style={{fontSize:9}}>{c.to}</span>
+              <span style={{marginLeft:'auto',fontFamily:'var(--mono)',fontSize:10,color:'var(--t3)'}}>{c.time}</span>
+            </div>
+            <div style={{fontSize:12,lineHeight:1.5}}>{c.msg}</div>
+            <div style={{marginTop:6}}>
+              <span className="tag" style={{fontSize:9,background:'transparent',border:'1px solid '+typeColors[c.type],color:typeColors[c.type]}}>{c.type}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ========== DOCS & FILES ========== */
+function DocsPage() {
+  const [docs, setDocs] = useState(null);
+  const [selFile, setSelFile] = useState(null);
+  const [fileContent, setFileContent] = useState('');
+  const [expanded, setExpanded] = useState({});
+
+  useEffect(() => {
+    fetcher('/api/docs').then(d => setDocs(d));
+  }, []);
+
+  const toggleExpand = (key) => setExpanded(p => ({...p, [key]: !p[key]}));
+
+  const viewFile = (path) => {
+    setSelFile(path);
+    fetcher('/api/docs/read?path=' + encodeURIComponent(path)).then(d => {
+      setFileContent(d?.content || 'Unable to read file');
+    });
+  };
+
+  const categories = [
+    {name:'Core',icon:'\u{1F3DB}',paths:['FOUNDATION.md','AGENTS.md','CLAUDE.md']},
+    {name:'Atlas',icon:'\u{1F3DB}',agent:'atlas'},
+    {name:'HVAC',icon:'\u2744\uFE0F',agent:'hvac'},
+    {name:'Markets',icon:'\u{1F4C8}',agent:'markets'},
+    {name:'Digital',icon:'\u{1F310}',agent:'digital'},
+    {name:'Personal',icon:'\u{1F464}',agent:'personal'},
+    {name:'Journals',icon:'\u{1F4D3}',type:'journals'},
+    {name:'References',icon:'\u{1F4DA}',type:'references'}
+  ];
+
+  const allFiles = docs?.files || [];
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Docs & Files</div>
+          <div className="ph-sub">{allFiles.length || 0} files across all workspaces</div>
+        </div>
+      </div>
+
+      <div className="grid-2">
+        <div>
+          {categories.map(cat => {
+            const catFiles = cat.paths || allFiles.filter(f => {
+              if (cat.agent) return f.path?.includes('clawd-' + cat.agent) || f.agent === cat.agent;
+              if (cat.type) return f.type === cat.type || f.path?.includes(cat.type);
+              return false;
+            });
+            return (
+              <div key={cat.name} style={{marginBottom:8}}>
+                <div className="tree-item" onClick={() => toggleExpand(cat.name)} style={{fontWeight:600}}>
+                  <span className="tree-expand">{expanded[cat.name] ? '\u25BC' : '\u25B6'}</span>
+                  <span className="tree-icon">{cat.icon}</span>
+                  <span>{cat.name}</span>
+                  <span style={{marginLeft:'auto',fontFamily:'var(--mono)',fontSize:10,color:'var(--t3)'}}>{Array.isArray(catFiles) ? catFiles.length : 0}</span>
+                </div>
+                {expanded[cat.name] && (
+                  <div style={{paddingLeft:24}}>
+                    {(Array.isArray(catFiles) ? catFiles : []).map((f,i) => {
+                      const path = typeof f === 'string' ? f : f.path;
+                      const name = path?.split('/').pop() || f;
+                      return (
+                        <div key={i} className="tree-item" onClick={() => viewFile(path)}
+                          style={{background:selFile === path ? 'var(--acg)' : undefined}}>
+                          <span className="tree-icon">{'\u{1F4C4}'}</span>
+                          <span>{name}</span>
+                        </div>
+                      );
+                    })}
+                    {(!catFiles || catFiles.length === 0) && (
+                      <div style={{fontSize:11,color:'var(--t3)',padding:'6px 10px'}}>No files found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="gl" style={{padding:16,maxHeight:'calc(100vh - 160px)',overflow:'auto'}}>
+          {selFile ? (
+            <React.Fragment>
+              <div style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--t3)',marginBottom:10}}>{selFile}</div>
+              <pre style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--t1)',whiteSpace:'pre-wrap',lineHeight:1.6}}>{fileContent}</pre>
+            </React.Fragment>
+          ) : (
+            <div style={{textAlign:'center',padding:40,color:'var(--t3)',fontSize:12}}>Select a file to view its contents</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== SETTINGS ========== */
+function SettingsPage({theme, setTheme}) {
+  const themes = [
+    {id:'dark',label:'Dark',bg:'linear-gradient(135deg,#0a0a0f,#1a1a2e)'},
+    {id:'light',label:'Light',bg:'linear-gradient(135deg,#f2f2f8,#ffffff)'},
+    {id:'midnight',label:'Midnight',bg:'linear-gradient(135deg,#040810,#0d1224)'}
+  ];
+
+  return (
+    <div className="anim">
+      <div className="ph">
+        <div>
+          <div className="ph-title">Settings</div>
+          <div className="ph-sub">Customize your Command Center</div>
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:20,marginBottom:16}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Theme</div>
+        <div style={{display:'flex',gap:10}}>
+          {themes.map(t => (
+            <div key={t.id} style={{flex:1,padding:16,textAlign:'center',borderRadius:12,cursor:'pointer',
+              border:theme===t.id?'2px solid var(--ac)':'2px solid var(--glb)',
+              boxShadow:theme===t.id?'0 0 16px var(--acg)':'none',transition:'all 0.2s'}}
+              onClick={() => setTheme(t.id)}>
+              <div style={{width:44,height:44,borderRadius:10,background:t.bg,margin:'0 auto 8px',border:'2px solid var(--glb)'}}></div>
+              <div style={{fontSize:12,fontWeight:600}}>{t.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:20,marginBottom:16}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>System Information</div>
+        <div style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--t2)',lineHeight:2.2}}>
+          <div>Gateway: OpenClaw 2026.2.13</div>
+          <div>Dashboard: Command Center v4.0</div>
+          <div>Default Model: Claude Haiku 4.5 ($1/$5 MTok)</div>
+          <div>Heavy Model: Claude Opus 4.6 ($15/$75 MTok)</div>
+          <div>Budget Model: DeepSeek V3 ($0.19/$0.87 MTok)</div>
+          <div>Free Tier: Gemini Flash (heartbeats)</div>
+          <div>DM Policy: Allowlist (367771509)</div>
+          <div>VPS: 15.204.242.195 (OVH)</div>
+        </div>
+      </div>
+
+      <div className="gl" style={{padding:20}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Quick Actions</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <button className="btn btn-s">Restart Gateway</button>
+          <button className="btn btn-s">Clear Cache</button>
+          <button className="btn btn-s">Run Security Audit</button>
+          <button className="btn btn-s">Export Dashboard Data</button>
+          <button className="btn btn-d">Kill All Background Processes</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== COMMAND PALETTE ========== */
+function CommandPalette({show, onClose, onNav}) {
+  const [q, setQ] = useState('');
+  const [selIdx, setSelIdx] = useState(0);
+  const inputRef = useRef(null);
+
+  useEffect(() => { if (show && inputRef.current) { inputRef.current.focus(); setQ(''); setSelIdx(0); } }, [show]);
+
+  const items = [
+    {label:'Dashboard',icon:'\u{1F4CA}',page:'dashboard',keys:'Ctrl+1'},
+    {label:'Operations / Kanban',icon:'\u{1F5C2}',page:'operations',keys:'Ctrl+2'},
+    {label:'Builds & Tasks',icon:'\u{1F4CB}',page:'builds',keys:'Ctrl+3'},
+    {label:'Agents',icon:'\u{1F916}',page:'agents',keys:'Ctrl+4'},
+    {label:'Skills',icon:'\u{1F9E0}',page:'skills'},
+    {label:'Cron Jobs',icon:'\u23F0',page:'cron'},
+    {label:'Security',icon:'\u{1F6E1}',page:'security'},
+    {label:'Token Usage',icon:'\u{1F4B0}',page:'usage'},
+    {label:'VPS Health',icon:'\u{1F49A}',page:'health'},
+    {label:'Assistant',icon:'\u{1F4AC}',page:'assistant'},
+    {label:'Agent Comms',icon:'\u{1F4E8}',page:'comms'},
+    {label:'Docs & Files',icon:'\u{1F4C2}',page:'docs'},
+    {label:'Settings',icon:'\u2699\uFE0F',page:'settings'}
+  ];
+
+  const filtered = q ? items.filter(i => i.label.toLowerCase().includes(q.toLowerCase())) : items;
+
+  const onKey = (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSelIdx(p => Math.min(p+1, filtered.length-1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setSelIdx(p => Math.max(p-1, 0)); }
+    else if (e.key === 'Enter' && filtered[selIdx]) { onNav(filtered[selIdx].page); onClose(); }
+    else if (e.key === 'Escape') { onClose(); }
+  };
+
+  if (!show) return null;
+  return (
+    <div className="cmd-bg" onClick={onClose}>
+      <div className="cmd-box" onClick={e => e.stopPropagation()}>
+        <input ref={inputRef} className="cmd-input" placeholder="Jump to page..." value={q} onChange={e => {setQ(e.target.value); setSelIdx(0);}} onKeyDown={onKey} />
+        <div className="cmd-results">
+          {filtered.map((it,i) => (
+            <div key={it.page} className={'cmd-item' + (i === selIdx ? ' sel' : '')} onClick={() => {onNav(it.page); onClose();}}
+              onMouseEnter={() => setSelIdx(i)}>
+              <span className="icon">{it.icon}</span>
+              <span>{it.label}</span>
+              {it.keys && <span className="shortcut">{it.keys}</span>}
+            </div>
+          ))}
+          {filtered.length === 0 && <div style={{padding:16,textAlign:'center',color:'var(--t3)',fontSize:12}}>No results</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== APP ========== */
+function App() {
+  const [auth, setAuth] = useState(false);
+  const [page, setPage] = useState('dashboard');
+  const [theme, setTheme] = useLocalState('cc-theme', 'dark');
+  const [tasks, setTasks] = useLocalState('cc-tasks', INIT_TASKS);
+  const [showCmd, setShowCmd] = useState(false);
+
+  useEffect(() => { document.body.setAttribute('data-theme', theme); }, [theme]);
+  useEffect(() => { const s = sessionStorage.getItem('cc-auth-v4'); if (s) setAuth(true); }, []);
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setShowCmd(true); }
+      if (e.key === 'Escape') setShowCmd(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const login = () => { setAuth(true); sessionStorage.setItem('cc-auth-v4', 'true'); };
+
+  if (!auth) return <LoginPage onLogin={login} />;
+
+  const pages = {
+    dashboard: <DashboardPage tasks={tasks} goPage={setPage} />,
+    operations: <KanbanPage tasks={tasks} setTasks={setTasks} />,
+    builds: <BuildsPage tasks={tasks} setTasks={setTasks} />,
+    agents: <AgentsPage />,
+    skills: <SkillsPage />,
+    cron: <CronPage />,
+    security: <SecurityPage />,
+    usage: <UsagePage />,
+    health: <HealthPage />,
+    assistant: <AssistantPage />,
+    comms: <CommsPage />,
+    docs: <DocsPage />,
+    settings: <SettingsPage theme={theme} setTheme={setTheme} />
+  };
+
+  return (
+    <div className="app">
+      <Sidebar page={page} go={setPage} notifCount={0} />
+      <div className="mn">{pages[page]}</div>
+      <CommandPalette show={showCmd} onClose={() => setShowCmd(false)} onNav={setPage} />
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>

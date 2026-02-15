@@ -386,16 +386,20 @@ function DashboardPage({tasks, goPage}) {
   useEffect(() => {
     const load = async () => {
       const [h, m, c, a] = await Promise.all([
-        fetcher('/api/health'), fetcher('/api/momo'), fetcher('/api/cron'), fetcher('/api/agents')
+        fetcher('/api/health'), fetcher('/api/markets/momo'), fetcher('/api/cron'), fetcher('/api/agents')
       ]);
       setLive({
-        cpu: Number(h?.cpu) || 0, mem: Number(h?.memory?.usedPercent) || 0,
-        disk: Number(h?.disk?.usedPercent) || 0, uptime: h?.uptime || '--',
-        momo: Number(m?.primary?.priceUsd || m?.priceUsd) || 0,
-        momoVol: Number(m?.primary?.volume24h || m?.volume24h) || 0,
-        agents: Number(a?.sessions?.length) || 0,
-        crons: Number(c?.jobs?.filter(j => j.enabled)?.length) || 0,
-        totalCrons: Number(c?.jobs?.length) || 0
+        cpu: parseFloat(h?.cpu?.percent) || 0,
+        mem: parseFloat(h?.memory?.percent) || 0,
+        disk: parseFloat(h?.disk?.percent) || 0,
+        uptime: h?.uptime || '--',
+        momo: parseFloat(m?.pairs?.[0]?.price_usd) || 0,
+        momoVol: parseFloat(m?.pairs?.[0]?.volume_24h) || 0,
+        momoChange: parseFloat(m?.pairs?.[0]?.price_change_24h) || 0,
+        agents: a?.agents?.reduce(function(s,x){return s+(x.sessions||0)},0) || 0,
+        agentList: a?.agents || [],
+        crons: c?.jobs?.filter(function(j){return j.enabled})?.length || 0,
+        totalCrons: c?.jobs?.length || 0
       });
       setTs(new Date().toLocaleTimeString());
     };
@@ -425,19 +429,19 @@ function DashboardPage({tasks, goPage}) {
         <div className="gl stat" style={{'--accent':'var(--ac)'}}>
           <div className="stat-icon">{'\u{1F4BB}'}</div>
           <div className="stat-label">CPU Usage</div>
-          <div className="stat-val" style={{color:'var(--ac)'}}>{parseFloat(live.cpu).toFixed(1)}%</div>
+          <div className="stat-val" style={{color:'var(--ac)'}}>{parseFloat(live.cpu||0).toFixed(1)}%</div>
           <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.cpu+'%',background:'var(--ac)'}}></div></div>
         </div>
         <div className="gl stat">
           <div className="stat-icon">{'\u{1F9E0}'}</div>
           <div className="stat-label">Memory</div>
-          <div className="stat-val" style={{color:'var(--ac2)'}}>{parseFloat(live.mem).toFixed(1)}%</div>
+          <div className="stat-val" style={{color:'var(--ac2)'}}>{parseFloat(live.mem||0).toFixed(1)}%</div>
           <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.mem+'%',background:'var(--ac2)'}}></div></div>
         </div>
         <div className="gl stat">
           <div className="stat-icon">{'\u{1F4BE}'}</div>
           <div className="stat-label">Disk</div>
-          <div className="stat-val">{parseFloat(live.disk).toFixed(1)}%</div>
+          <div className="stat-val">{parseFloat(live.disk||0).toFixed(1)}%</div>
           <div className="gauge" style={{marginTop:8}}><div className="gauge-fill" style={{width:live.disk+'%',background:live.disk>80?'var(--bad)':'var(--ok)'}}></div></div>
         </div>
         <div className="gl stat">
@@ -781,14 +785,14 @@ function AgentsPage() {
       <div className="ph">
         <div>
           <div className="ph-title">Agents</div>
-          <div className="ph-sub">5 primary bots | {agentData?.sessions?.length || 0} active sessions</div>
+          <div className="ph-sub">5 primary bots | {agentData?.agents?.reduce(function(s,x){return s+(x.sessions||0)},0) || 0} active sessions</div>
         </div>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
         {AGENTS.map(a => {
-          const session = agentData?.sessions?.find(s => s.agentId === a.id);
-          const isOnline = !!session;
+          const agInfo = agentData?.agents?.find(function(s){return s.id===a.id});
+          const isOnline = agInfo && agInfo.sessions > 0;
           const subs = subAgents[a.id] || [];
           return (
             <div key={a.id} className="gl" style={{padding:18,cursor:'pointer',borderColor:selAgent===a.id?a.color:undefined}} onClick={() => setSelAgent(selAgent === a.id ? null : a.id)}>
@@ -803,9 +807,9 @@ function AgentsPage() {
                   {isOnline ? 'Online' : 'Idle'}
                 </span>
               </div>
-              {session && (
+              {isOnline && (
                 <div style={{fontSize:10,color:'var(--t3)',fontFamily:'var(--mono)',marginBottom:10}}>
-                  Model: {session.model || 'haiku'} | Session: {session.id?.slice(0,8)}
+                  Sessions: {agInfo?.sessions || 0} | Model: Haiku 4.5
                 </div>
               )}
               <div style={{fontSize:10,fontWeight:600,color:'var(--t3)',marginBottom:6}}>SUB-AGENTS ({subs.length})</div>
@@ -1185,9 +1189,9 @@ function HealthPage() {
     );
   };
 
-  const cpu = Number(h?.cpu) || 0;
-  const mem = Number(h?.memory?.usedPercent) || 0;
-  const disk = Number(h?.disk?.usedPercent) || 0;
+  const cpu = parseFloat(h?.cpu?.percent) || 0;
+  const mem = parseFloat(h?.memory?.percent) || 0;
+  const disk = parseFloat(h?.disk?.percent) || 0;
 
   return (
     <div className="anim">
@@ -1204,7 +1208,7 @@ function HealthPage() {
           <div style={{fontSize:12,fontWeight:600,color:'var(--t2)',marginBottom:12}}>CPU</div>
           <RingGauge pct={cpu} color={cpu > 80 ? 'var(--bad)' : cpu > 50 ? 'var(--warn)' : 'var(--ok)'} size={120} />
           <div style={{marginTop:10,fontFamily:'var(--mono)',fontSize:11,color:'var(--t3)'}}>
-            Load: {h?.loadAvg?.[0]?.toFixed(2) || '--'}
+            Load: {h?.cpu?.load || '--'}
           </div>
         </div>
         <div className="gl" style={{padding:24,textAlign:'center'}}>
@@ -1226,12 +1230,13 @@ function HealthPage() {
       <div className="gl" style={{padding:18}}>
         <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>System Details</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,fontFamily:'var(--mono)',fontSize:11,color:'var(--t2)'}}>
-          <div>Hostname: {h?.hostname || 'vps-7e1cdeea'}</div>
+          <div>Hostname: vps-7e1cdeea</div>
           <div>Uptime: {h?.uptime || '--'}</div>
-          <div>OS: {h?.os || 'Ubuntu 24.04'}</div>
-          <div>Node: {h?.nodeVersion || '--'}</div>
-          <div>Processes: {h?.processes || '--'}</div>
-          <div>Gateway: OpenClaw 2026.2.13</div>
+          <div>OS: Ubuntu 24.04</div>
+          <div>CPU: {h?.cpu?.cores || '--'} cores | Load {h?.cpu?.load || '--'}</div>
+          <div>Memory: {(h?.memory?.used||'--')+' / '+(h?.memory?.total||'--')+' GB'}</div>
+          <div>Disk: {(h?.disk?.used||'--')+' / '+(h?.disk?.total||'--')}</div>
+          <div>Gateway: {h?.gateway?.running ? 'Running' : 'Stopped'}</div>
         </div>
       </div>
 
